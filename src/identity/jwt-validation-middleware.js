@@ -1,6 +1,6 @@
-const config = require('../config.js')
 const HttpStatus = require('http-status-codes')
 const jwt = require('jsonwebtoken')
+const config = require('../config.js')
 
 module.exports = (req, res, next) => {
 

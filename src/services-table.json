@@ -1,0 +1,4 @@
+{
+    "admin": "http://localhost:5100/",
+    "chat": "http://localhost:4000/"
+}

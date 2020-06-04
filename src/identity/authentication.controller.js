@@ -46,7 +46,7 @@ router.post('/register', userValidations, async (req, res) => {
     }
 
     // Verify if username is already taken by another user
-    let isUsernameTaken = await User.user.findOne({ username: req.body.username })
+    let isUsernameTaken = await User.findOne({ username: req.body.username })
     if (isUsernameTaken) {
         return res.status(HttpStatus.CONFLICT).send({ message: 'User name is already taken' })
     }
