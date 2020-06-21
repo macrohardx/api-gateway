@@ -1,20 +1,34 @@
-const { get } = require('lodash')
-const proxyReqPathResolver = require('./identity/auth-proxy-request-resolver')
-const proxy = require('express-http-proxy')
+const { get, keys, find } = require('lodash')
+const { createProxyMiddleware } = require('http-proxy-middleware')
+const url = require('url')
 
-module.exports = (req, res, next) => {
-    const serviceName = get(req.url.split('/'), '[1]', '').toLocaleLowerCase()
+// Local cache with built proxies
+const proxies = []
 
-    // TODO: Use reference table to get starting url
-    //req.url = req.originalUrl
-    //req.url = '/'
-
+module.exports = () => (req, res, next) => {
     req.headers['x-real-ip'] = req.connection.remoteAddress
-    if (req.servicesTable[serviceName]) {
-        const serviceProxy = proxy(req.servicesTable[serviceName], { proxyReqPathResolver })
+    
+    let proxyTarget = getPathTarget(req.servicesTable, req.originalUrl)
+    if (proxyTarget) {        
+        // It's not possible to create the proxy per request, since the socket upgrade needs to happen on the same connection
+        const serviceProxy = proxies[proxyTarget]  || createProxyMiddleware({
+            target: proxyTarget,
+            ws: true, // Accept upgrade to websocket connection
+            logLevel: 'error',
+            changeOrigin: true,
+            xfwd: true
+        })
         serviceProxy(req, res, next)
+        proxies[proxyTarget] = serviceProxy
     }
     else {
         next()
     }
+}
+
+function getPathTarget (list, path) {
+    let key = find(keys(list), (key) => {
+        return new RegExp(`^${key}.*`).test(path)
+    })
+    return list[key]
 }

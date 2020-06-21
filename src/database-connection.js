@@ -1,14 +1,14 @@
-const mongoose = require('mongoose')
-const config = require('./config.js')
-
-module.exports.connect = async () => {
-    let connection_url = `${config.mongo_url}/${config.db_name}`
-    await mongoose.connect(connection_url, {
+const maybeConnectToDatabase = (database, dbUrl, dbName, dbTimeout) =>
+    database.connect(`${dbUrl}/${dbName}`, {
         useNewUrlParser: true,
         //useUnifiedTopology: true, // Timeout doesn't work with this option on
         useCreateIndex: true,
-        connectTimeoutMS: config.db_connection_timeout,
-        socketTimeoutMS: config.db_connection_timeout
+        connectTimeoutMS: dbTimeout,
+        socketTimeoutMS: dbTimeout
     })
-    console.log(`connected to mongo at: ${connection_url}`)
-}
+    .then(value => Promise.resolve({ ok: true, value }))
+    .catch(error => Promise.resolve({ ok: false, error: new Error(error) }))
+
+module.exports = {
+    maybeConnectToDatabase
+}    

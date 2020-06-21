@@ -7,15 +7,29 @@ const config               = require('../config')
 const { validationResult } = require('express-validator')
 const userValidations      = require('./user-validation')
 const HttpStatus           = require('http-status-codes')
+const Session              = require('./session')
 
-// register middleware that parses application/x-www-form-urlencoded
-router.use(bodyParser.urlencoded({ extended: true }))
+module.exports = () => {
 
-// register middleware that parses application/json
-router.use(bodyParser.json())
+    // register middleware that parses application/x-www-form-urlencoded
+    router.use(bodyParser.urlencoded({ extended: true }))
 
-// api/auth/login
-router.post('/login', async (req, res) => {
+    // register middleware that parses application/json
+    router.use(bodyParser.json())
+
+    // api/auth/login
+    router.post('/login', login)
+
+    // api/auth/register
+    router.post('/register', userValidations, registerUser)
+
+    // api/auth/logout
+    router.post('/logout', logout)
+
+    return router
+}
+
+async function login(req, res) {
 
     // Verifies if user exists on database
     let user = await User.findOne({ username: req.body.username })
@@ -29,20 +43,19 @@ router.post('/login', async (req, res) => {
     }
 
     // Generate signed token (JWT)
-    let token = jwt.sign({ id: user._id }, config.secret, {
-        expiresIn: config.tokenExpiresIn
-    })
+    let token = await createToken(user)
+
+    res.cookie('x-access-token', token, { httpOnly: true, maxAge: config.tokenExpiresIn * 1000 })
 
     res.status(HttpStatus.OK).send({ token })
-})
+}
 
-// api/auth/register
-router.post('/register', userValidations, async (req, res) => {
+async function registerUser (req, res) {
 
     // Gather all validation errors
     let errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ errors: errors.array() });
+        return res.status(HttpStatus.UNPROCESSABLE_ENTITY).send({ message: errors.array().map(e => e.msg).join('<br>') });
     }
 
     // Verify if username is already taken by another user
@@ -59,11 +72,63 @@ router.post('/register', userValidations, async (req, res) => {
     })
 
     // Generate signed token (JWT)
-    let token = jwt.sign({ id: user._id }, config.secret, {
-        expiresIn: config.tokenExpiresIn
-    })
+    let token = await createToken(user)
+
+    res.cookie('x-access-token', token, { httpOnly: true, maxAge: config.tokenExpiresIn * 1000 })
     
     return res.status(HttpStatus.CREATED).send({ token })
-})
+}
 
-module.exports = router
+const createToken = async (user) => {
+    
+    // Creates new session
+    const session = await getOrCreateUserSession(user)
+
+    return jwt.sign({ 
+            id: user._id, 
+            username: user.username,
+            session_id: session.id
+        }, config.secret, {
+        expiresIn: config.tokenExpiresIn
+    })
+}
+
+const getOrCreateUserSession = async (user) => {
+
+    const now = new Date()
+    const session = await Session.findOne({ user_id: user.id, loggedOutAt: null, expiresAt: { '$gt': now } })
+    if (session) {
+        return session
+    }
+
+    let expiresAt = new Date()
+    expiresAt.setSeconds(expiresAt.getSeconds() + config.tokenExpiresIn)
+    return await Session.create({
+        user_id: user.id,
+        loggedInAt: now,
+        expiresAt: expiresAt
+    })
+}
+
+async function logout (req, res) {
+    var token = req.headers['x-access-token'];
+
+    if (!token) {
+        token = req.cookies['x-access-token']
+    }
+
+    if (!token) {
+        return res.status(HttpStatus.BAD_REQUEST).send({ message: 'Invalid Session' })
+    }
+
+    jwt.verify(token, config.secret, async (err, decoded) => {
+        if (err) {
+            return res.status(HttpStatus.BAD_REQUEST).send({ message: 'Invalid Session' })
+        }
+        let session = await Session.findById(decoded.session_id)
+        await session.updateOne({ loggedOutAt: new Date() })
+
+        res.clearCookie('x-access-token')
+        res.sendStatus(HttpStatus.OK)
+    })    
+}

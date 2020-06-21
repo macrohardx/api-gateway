@@ -1,4 +1,5 @@
 {
-    "admin": "http://localhost:5100/",
-    "chat": "http://localhost:4000/"
+    "/api/admin": "http://localhost:5100/",
+    "/api/chat": "http://localhost:4000/",
+    "/macro-code": "http://localhost:4001/"
 }

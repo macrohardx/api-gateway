@@ -1,20 +1,53 @@
 const HttpStatus = require('http-status-codes')
-const jwt = require('jsonwebtoken')
-const config = require('../config.js')
+const jwt        = require('jsonwebtoken')
+const config     = require('../config.js')
+const User       = require('./user')
 
 module.exports = (req, res, next) => {
 
+    // Ignore static files (JS, png, jpeg, etc.)
+    let dontAuthenticatePatterns = config.dontAuthenticate || []
+    for (let pattern of dontAuthenticatePatterns) {
+        let regexp = new RegExp(pattern)
+        if (regexp.test(req.path)) {
+            return next()
+        }
+    }
     var token = req.headers['x-access-token'];
+
     if (!token) {
-        return res.status(HttpStatus.FORBIDDEN).send({ message: 'No token provided.' });
+        token = req.cookies['x-access-token']
     }
 
-    jwt.verify(token, config.secret, function (err, decoded) {
+    let isLoginPath = (req.baseUrl === config.login_path || req.baseUrl === config.registration_path)
+
+    if (!token && !isLoginPath) {
+        return res.status(HttpStatus.UNAUTHORIZED).redirect(`${config.login_path}?redirect_url=${req.path}`)
+    }
+
+    if (!token && isLoginPath) {
+        return next()
+    }
+
+    jwt.verify(token, config.secret, async (err, decoded) => {
         if (err) {
-            console.log(err)
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message: 'Failed to authenticate token.' });
+            res.clearCookie('x-access-token')
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message: 'Invalid token' });
         }
+
+        let user = await User.findById(decoded.id)
+        if (!user) {
+            res.clearCookie('x-access-token')
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ message: 'Invalid token' });
+        }
+
+        req.headers['x-user-id'] = decoded.id
         req.userId = decoded.id;
+
+        if (isLoginPath) {
+            return res.redirect('/')
+        }
+
         next();
     });
 }
