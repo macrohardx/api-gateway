@@ -8,18 +8,25 @@ const cacheMiddleware = require('./cache-middleware')
 const log = (a) => console.log(a) || true
 const path = require('path')
 const cookieParser = require('cookie-parser')
+const { maybeGetLanIpAddress } = require('./utils/ip-helper')
 
 module.exports.startApp = async () => {
+
+    const ipResult = maybeGetLanIpAddress(config.lan_ip_pattern)
+    if (ipResult.error) {
+        log(`Error obtaining server's ip address - ${ipResult.error}`)
+        return process.exit(1);
+    }
 
     let { ok, error } = await maybeConnectToDatabase(mongoose, config.mongo_url, config.db_name, config.db_connection_timeout)
     if (!ok) {
         log(`Error connecting to database - ${error}`)
-        return process.exit(1)
+        return process.exit(2)
     }
 
     // Start express app
     app.listen(config.gateway_port, () => {
-        log(`::::${config.service_name}:::: Listening to http://localhost:${config.gateway_port}`)
+        log(`::::${config.service_name}:::: Listening to http://${ipResult.ipAddress}:${config.gateway_port}`)
     })
 
     app.use(cookieParser())
@@ -45,7 +52,7 @@ module.exports.startApp = async () => {
 
     // Endpoint responsible for redirecting the request to it's respective service
     const proxyController = require('./proxy.controller')
-    app.use('/', tokenValidator, proxyController())
+    app.use('/', tokenValidator, proxyController(ipResult.ipAddress, config.gateway_port))
 
     // Home page Route
     app.use(config.home_path, tokenValidator, express.static(path.join(__dirname, 'public/home')))

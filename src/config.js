@@ -1,4 +1,5 @@
 module.exports = {
+    lan_ip_pattern: '192.168.0',
     service_name: 'API GATEWAY',
     mongo_url: 'mongodb://localhost:3010',
     db_name: 'macrohard',

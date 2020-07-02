@@ -5,13 +5,14 @@ const url = require('url')
 // Local cache with built proxies
 const proxies = []
 
-module.exports = () => (req, res, next) => {
+module.exports = (serverIp, port) => (req, res, next) => {
     req.headers['x-real-ip'] = req.connection.remoteAddress
-    
+    req.headers['x-gateway'] = `${serverIp}:${port}`
+
     let proxyTarget = getPathTarget(req.servicesTable, req.originalUrl)
-    if (proxyTarget) {        
+    if (proxyTarget) {
         // It's not possible to create the proxy per request, since the socket upgrade needs to happen on the same connection
-        const serviceProxy = proxies[proxyTarget]  || createProxyMiddleware({
+        const serviceProxy = proxies[proxyTarget] || createProxyMiddleware({
             target: proxyTarget,
             ws: true, // Accept upgrade to websocket connection
             logLevel: 'error',
@@ -26,7 +27,7 @@ module.exports = () => (req, res, next) => {
     }
 }
 
-function getPathTarget (list, path) {
+function getPathTarget(list, path) {
     let key = find(keys(list), (key) => {
         return new RegExp(`^${key}.*`).test(path)
     })
