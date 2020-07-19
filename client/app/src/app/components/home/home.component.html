@@ -1,0 +1,19 @@
+<p>home works!</p>
+
+<ng-template #content let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-basic-title">Profile update</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+        <app-image-cropper (imageCropped)="cuzin($event)"></app-image-cropper>
+    </div>
+  </ng-template>
+  
+  <button class="btn btn-lg btn-outline-primary" (click)="openModal(content)">Launch demo modal</button>
+
+  <img [src]="img" width="400"/>
+
+  <button (click)="savePic()">Save Pic</button>
