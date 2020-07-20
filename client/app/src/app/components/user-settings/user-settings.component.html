@@ -1,28 +1,46 @@
 <div>
 
     <div>
-        
+        <img src="/api/user/profile-pic?r={{new_img_rnd}}" width="300" height="300" />
     </div>
+    <p>User Name: {{user.username}}</p>
+    <p>Host Name: {{user.hostname}}</p>
+
+    <ng-template #modalUserPic let-modal>
+        <div class="modal-header">
+            <h4 class="modal-title" id="modal-basic-title">Profile update</h4>
+            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <app-image-cropper (imageCropped)="imageCropped($event)"></app-image-cropper>
+        </div>
+    </ng-template>
+    <button class="btn btn-lg btn-outline-primary" (click)="openModal(modalUserPic)">Launch demo modal</button>
+
 
     <div class="form-group">
-        <label for="name">Name</label>
-        <input type="text" class="form-control" id="name" aria-describedby="nameHelp">
-        <small id="nameHelp" class="form-text text-muted">Display Name</small>
+        <label for="name">Password Tip</label>
+        <input type="text" class="form-control" id="name" aria-describedby="nameHelp" [(ngModel)]="user.passwordTip">
     </div>
 
-    <div class="form-group">
-        <label for="currentPassword">Current Password</label>
-        <input type="password" class="form-control" id="currentPassword">
-    </div>
+    <form>
+        <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" class="form-control" id="currentPassword">
+        </div>
 
-    <div class="form-group">
-        <label for="newPassword">New Password</label>
-        <input type="password" class="form-control" id="newPassword">
-    </div>
+        <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" class="form-control" id="newPassword">
+        </div>
 
-    <div class="form-group">
-        <label for="confirmPassword">Password Confirmation</label>
-        <input type="password" class="form-control" id="confirmPassword">
-    </div>
+        <div class="form-group">
+            <label for="confirmPassword">Password Confirmation</label>
+            <input type="password" class="form-control" id="confirmPassword">
+        </div>
+        <button class="btn btn-primary">Change password</button>
+    </form>
 
 </div>

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha './test/**/*.test.js'",
-    "ng-build": "npm run build-prod --prefix ../client/app",
+    "ng-build-dev": "npm run build-dev --prefix ../client/app",
+    "ng-build-prod": "npm run build-prod --prefix ../client/app",
     "start": "npm run ng-build && node index.js"
   },
   "keywords": [],

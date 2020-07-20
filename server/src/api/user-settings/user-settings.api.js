@@ -17,12 +17,20 @@ router.get('/profile-pic', async (req, res) => {
         return res.status(HttpStatus.FORBIDDEN).send({})
     }
 
+    let user
+    if (req.query.username) {
+        user = await User.findOne({ username: req.query.username })
+    }
+    else {
+        user = req.user
+    }
+
     if (!user.profilePictureLocation) {
         return res.status(HttpStatusOk).send('')
     }
 
     res.set(cacheForDuration('10m'))
-    return res.contentType(getMimeTypeFromFilePath(req.user.profilePictureLocation)).sendFile(req.user.profilePictureLocation, { maxAge: '10m' })
+    return res.contentType(getMimeTypeFromFilePath(user.profilePictureLocation)).sendFile(user.profilePictureLocation, { maxAge: '10m' })
 })
 
 // list processes
@@ -32,8 +40,7 @@ router.put('/profile-pic', async (req, res) => {
         await safeCreateDirectory(fs, config.fileServerPath)
     }
 
-    let user = await User.findById(req.userId)
-    if (!user) {
+    if (!req.user) {
         return res.status(HttpStatus.FORBIDDEN).send({})
     }
 
@@ -41,8 +48,8 @@ router.put('/profile-pic', async (req, res) => {
     let outputPath = path.join(config.fileServerPath, `${req.userId}_profilePic.jpg`)
     await fs.promises.writeFile(outputPath, base64, { encoding: 'base64' })
     
-    user.profilePictureLocation = outputPath
-    await user.save()
+    req.user.profilePictureLocation = outputPath
+    await req.user.save()
 
     return res.send({})
 })
