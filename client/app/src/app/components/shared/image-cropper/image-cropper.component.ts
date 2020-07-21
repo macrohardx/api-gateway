@@ -7,9 +7,13 @@ import * as pica from 'pica'
     selector: 'app-image-cropper',
     styleUrls: ['./image-cropper.component.sass'],
     template: `
+    
+    <div class="custom-file">
+        <input type="file" class="custom-file-input" id="customFile" (change)="onFileChange($event)">
+        <label class="custom-file-label" for="customFile">{{ fileName || 'Choose file' }}</label>
+    </div>
     <angular-cropper #angularCropper [cropperOptions]="cropperConfig" [imageUrl]="imageSrc" *ngIf="imageSrc"></angular-cropper>
-    <input type="file" (change)="onFileChange($event)"/>
-    <button (click)="crop()" *ngIf="imageSrc">Crop</button>`
+    <button (click)="crop()" *ngIf="imageSrc" class="btn btn-primary">Crop</button>`
 })
 export class ImageCropperComponent implements OnInit {
 
@@ -18,6 +22,8 @@ export class ImageCropperComponent implements OnInit {
     public imageSrc: String;
 
     public resizer;
+
+    public fileName: String
 
     public resizerConfig = {
         unsharpAmount: 80,
@@ -38,6 +44,7 @@ export class ImageCropperComponent implements OnInit {
     }
 
     public async onFileChange(event) {
+        this.fileName = event.target.files[0].name;
         let maybeBase64 = await this._blobToBase64(event.target.files[0])
         if (maybeBase64.ok) {
             this.imageSrc = maybeBase64.data

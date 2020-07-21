@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 @Component({
     selector: 'app-user-settings',
     templateUrl: './user-settings.component.html',
-    styleUrls: ['./user-settings.component.sass']
+    styleUrls: ['./user-settings.component.scss']
 })
 export class UserSettingsComponent implements OnInit {
 
@@ -36,7 +36,7 @@ export class UserSettingsComponent implements OnInit {
     }
 
     public openModal(modalContent) {
-        this.modalProfilePic = this.modalService.open(modalContent, { ariaLabelledBy: 'modal-basic-title' })
+        this.modalProfilePic = this.modalService.open(modalContent, { size: 'lg' })
         this.modalProfilePic.result
             .then((result) => {
                 //close
