@@ -10,10 +10,12 @@ const path = require('path')
 const cookieParser = require('cookie-parser')
 const hostname = require('os').hostname()
 const fs = require('fs')
-const server = require('https').createServer({
+const httpsServer = require('https').createServer({
     cert: fs.readFileSync(path.join(__dirname, 'sslcert/MacroHard.crt'), 'utf-8'),
     key: fs.readFileSync(path.join(__dirname, 'sslcert/MacroHard.key'), 'utf-8'),
 }, app)
+const httpServer = require('http').createServer(app);
+const cors = require('cors');
 
 module.exports.startApp = async () => {
 
@@ -24,11 +26,16 @@ module.exports.startApp = async () => {
     }
 
     // Start express app
-    server.listen(config.gateway_port, '0.0.0.0', () => {
-        log(`::::${config.service_name}:::: Listening to https://${hostname}:${config.gateway_port}`)
+    httpsServer.listen(config.gateway_port_ssl, '0.0.0.0', () => {
+        log(`::::${config.service_name}:::: Listening to https://${hostname}:${config.gateway_port_ssl}`)
     })
+    httpServer.listen(config.gateway_port, '0.0.0.0', () => {
+        log(`::::${config.service_name}:::: Listening to http://${hostname}:${config.gateway_port}`)
+    });
+    
+    app.use(cors());
 
-    app.use(cookieParser())
+    app.use(cookieParser());
 
     // Middleware to handle cache results (also populates the services reference table)
     app.use(cacheMiddleware())

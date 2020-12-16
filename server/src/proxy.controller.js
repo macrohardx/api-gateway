@@ -17,7 +17,10 @@ module.exports = (serverIp, port) => (req, res, next) => {
             ws: true, // Accept upgrade to websocket connection
             logLevel: 'error',
             changeOrigin: true,
-            xfwd: true
+            xfwd: true,
+            onError: (error) => {
+                console.log('Dude something went wrong ', error)
+            }
         })
         serviceProxy(req, res, next)
         proxies[proxyTarget] = serviceProxy

@@ -8,7 +8,8 @@ module.exports = {
     home_path: '/',
     db_connection_timeout: 10000,
     secret: process.env.SECRET || 'MY SECRET PASSWORD',
-    gateway_port: process.env.GATEWAY_PORT || 5000,
+    gateway_port_ssl: process.env.GATEWAY_PORT_SSL || 5000,
+    gateway_port: process.env.GATEWAY_PORT || 5001,
     tokenExpiresIn: 86400,
     dontAuthenticate: [
         "^.*\.(tif|png|jpeg|jpg|bmp|css|js|ts|map|json|webp|ico|icon|woff|woff2|oft|ttf)$"

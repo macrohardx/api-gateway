@@ -71,9 +71,9 @@ async function registerUser(req, res) {
     let hostname
     if (config.user_registration.hostname_required) {
         let maybeHostname = await maybeGetHostName(req.connection.remoteAddress)
-        if (!maybeHostname.ok) {
-            return res.status(HttpStatus.NOT_ACCEPTABLE).send({ message: `It wasn\'t possible to resolve the host name for the ip: ${req.connection.remoteAddress}` })
-        }
+        // if (!maybeHostname.ok) {
+        //     return res.status(HttpStatus.NOT_ACCEPTABLE).send({ message: `It wasn\'t possible to resolve the host name for the ip: ${req.connection.remoteAddress}` })
+        // }
         hostname = maybeHostname.hostname
     }
 
@@ -108,7 +108,7 @@ const createToken = async (user) => {
     return jwt.sign({
         id: user._id,
         username: user.username,
-        session_id: session.id
+        sessionId: session.id
     }, config.secret, {
         expiresIn: config.tokenExpiresIn
     })
