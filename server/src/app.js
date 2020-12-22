@@ -33,7 +33,10 @@ module.exports.startApp = async () => {
         log(`::::${config.service_name}:::: Listening to http://${hostname}:${config.gateway_port}`)
     });
     
-    app.use(cors());
+    app.use(cors({
+        origin: 'http://localhost:4200',
+        credentials: true
+    }));
 
     app.use(cookieParser());
 
